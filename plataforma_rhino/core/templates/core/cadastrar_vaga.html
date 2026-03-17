@@ -1,0 +1,45 @@
+{% extends 'core/base.html' %} {% load crispy_forms_tags %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center mb-4">
+          <h3 class="fw-bold m-0" style="color: #0a1128">Nova Vaga</h3>
+        </div>
+
+        <p class="text-muted">
+          Preencha os detalhes abaixo para publicar uma nova oportunidade no
+          sistema da Rhino.
+        </p>
+        <hr />
+
+        <form method="post">
+          {% csrf_token %}
+
+          <div class="row">
+            <div class="col-md-12">{{ form.titulo|as_crispy_field }}</div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">{{ form.cliente|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.status|as_crispy_field }}</div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">{{ form.descricao|as_crispy_field }}</div>
+          </div>
+
+          <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-rhino px-4">
+              Publicar Vaga
+            </button>
+            <a href="{% url 'dashboard' %}" class="btn btn-light"
+              >Voltar ao Painel</a
+            >
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
