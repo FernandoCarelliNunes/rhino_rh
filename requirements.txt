@@ -146,11 +146,6 @@ jupyter_server_terminals==0.5.3
 jupyterlab==4.3.4
 jupyterlab_pygments==0.3.0
 jupyterlab_server==2.27.3
-Kivy==2.3.0
-kivy-deps.angle==0.4.0
-kivy-deps.glew==0.3.1
-kivy-deps.sdl2==0.7.0
-Kivy-Garden==0.1.5
 kiwisolver==1.4.5
 kubernetes==33.1.0
 langchain==0.3.27
