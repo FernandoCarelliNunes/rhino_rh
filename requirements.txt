@@ -73,9 +73,6 @@ filetype==1.2.0
 Flask==3.0.3
 flask-cors==6.0.1
 flatbuffers==25.2.10
-flet --update
-flet-core==0.21.1
-flet-runtime==0.21.1
 fonttools==4.50.0
 fqdn==1.5.1
 frozenlist==1.7.0
