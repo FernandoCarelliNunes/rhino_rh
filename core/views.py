@@ -200,12 +200,14 @@ def relatorio_geral(request):
 
     # 3. Tempo médio de fechamento (SLA)
     # Calculamos a diferença entre a data de criação e a data do último histórico para vagas 'Aprovado'
-    vagas_fechadas = vagas.filter(status='aprovado').annotate(
-        tempo_fechamento=ExpressionWrapper(
-            F('updated_at') - F('criado_em'), # Você precisará ter esses campos no model Vaga
-            output_field=fields.DurationField()
-        )
-    )
+    vagas_fechadas = vagas.filter(status='aprovado')
+    
+    # vagas_fechadas = vagas.filter(status='aprovado').annotate(
+    #     tempo_fechamento=ExpressionWrapper(
+    #         F('updated_at') - F('criado_em'), # Você precisará ter esses campos no model Vaga
+    #         output_field=fields.DurationField()
+    #     )
+    # )
     
     media_dias = vagas_fechadas.aggregate(media=Avg('tempo_fechamento'))['media']
     if media_dias:
