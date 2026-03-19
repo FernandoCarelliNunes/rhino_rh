@@ -202,7 +202,7 @@ def relatorio_geral(request):
     # Calculamos a diferença entre a data de criação e a data do último histórico para vagas 'Aprovado'
     vagas_fechadas = vagas.filter(status='aprovado').annotate(
         tempo_fechamento=ExpressionWrapper(
-            F('updated_at') - F('created_at'), # Você precisará ter esses campos no model Vaga
+            F('updated_at') - F('criado_em'), # Você precisará ter esses campos no model Vaga
             output_field=fields.DurationField()
         )
     )
