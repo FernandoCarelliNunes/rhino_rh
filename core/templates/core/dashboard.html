@@ -1,0 +1,174 @@
+{% extends 'core/base.html' %} {% block content %}
+<div class="row mb-4 align-items-center">
+  <div class="col-md-7">
+    <h2 class="fw-bold m-0">Painel de Controle</h2>
+    <p class="text-muted">
+      Bem-vindo ao sistema Rhino, <strong>{{ user.username }}</strong>.
+    </p>
+  </div>
+  <div class="col-md-5 text-md-end">
+    <div class="d-flex gap-2 justify-content-md-end">
+      {% if user.is_superuser %}
+      <a
+        href="{% url 'cadastrar_cliente' %}"
+        class="btn btn-outline-primary shadow-sm"
+        >Empresa Cliente</a
+      >
+      {% endif %}
+      <a href="{% url 'cadastrar_vaga' %}" class="btn btn-outline-dark"
+        >+ Nova Vaga</a
+      >
+      <a href="{% url 'cadastrar_candidato' %}" class="btn btn-rhino"
+        >+ Candidato</a
+      >
+    </div>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm border-0 p-4 h-100">
+      <h5 class="fw-bold mb-3">Fluxo por Etapa</h5>
+      <div style="height: 250px"><canvas id="funnelChart"></canvas></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div
+      class="card shadow-sm border-0 h-100 d-flex flex-column justify-content-center text-center p-4"
+    >
+      <h5 class="text-muted mb-2">Vagas Ativas</h5>
+      <h1 class="display-3 fw-bold text-primary m-0">{{ vagas.count }}</h1>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0 mt-4">
+  <div class="card-header bg-white fw-bold py-3">Gestão de Vagas Recentes</div>
+  <div class="card-body p-0">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th class="ps-3 border-0">Vaga</th>
+          <th class="border-0">Cliente</th>
+          <th class="border-0">Status</th>
+          <th class="text-center border-0">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vaga in vagas %}
+        <tr>
+          <td class="ps-3"><strong>{{ vaga.titulo }}</strong></td>
+          <td>{{ vaga.cliente.nome }}</td>
+          <td>
+            {% if user.is_superuser %}
+            <div class="dropdown">
+              <button
+                class="btn btn-sm dropdown-toggle border-0"
+                type="button"
+                data-bs-toggle="dropdown"
+                style="background-color: #0dcaf0; color: #000"
+              >
+                {{ vaga.get_status_display }}
+              </button>
+              <ul class="dropdown-menu shadow border-0">
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'mudar_status_vaga' vaga.id 'abertura' %}"
+                    >Abertura</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'mudar_status_vaga' vaga.id 'aprovado' %}"
+                    >Finalizar</a
+                  >
+                </li>
+              </ul>
+            </div>
+            {% else %}
+            <span class="badge bg-light text-dark border"
+              >{{ vaga.get_status_display }}</span
+            >
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <div class="d-flex gap-1 justify-content-center">
+              <a
+                href="{% url 'detalhes_vaga' vaga.id %}"
+                class="btn btn-sm btn-outline-dark"
+                >Ver Detalhes</a
+              >
+              <button
+                class="btn btn-sm btn-outline-primary"
+                onclick="copiarLink('{{ request.get_host }}{% url 'inscrever_vaga' vaga.id %}')"
+              >
+                <i class="bi bi-link-45deg"></i> Link
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="text-center p-5 text-muted">
+            Nenhuma vaga cadastrada.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // 1. CONFIGURAÇÃO DO GRÁFICO (CORES RHINO RH)
+  const ctx = document.getElementById('funnelChart').getContext('2d');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: {{ status_labels|safe|default:"[]" }},
+        datasets: [{
+          label: 'Candidatos',
+          data: {{ status_totals|safe|default:"[]" }},
+          backgroundColor: [
+            '#0a1128', // Azul Rhino
+            '#003554',
+            '#0582ca',
+            '#00a6fb',
+            '#198754', // Verde (Aprovado)
+            '#dc3545'  // Vermelho (Reprovado)
+          ],
+          borderRadius: 8,
+          barThickness: 40
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1 } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // 2. FUNÇÃO COPIAR LINK (RESTAURADA)
+  function copiarLink(url) {
+      // Monta a URL completa (http/https + endereço)
+      const fullUrl = window.location.protocol + '//' + url;
+
+      navigator.clipboard.writeText(fullUrl).then(() => {
+          alert("🚀 Link de inscrição copiado com sucesso!\nAgora você pode enviar para o candidato.");
+      }).catch(err => {
+          console.error('Erro ao copiar: ', err);
+          alert("Erro ao copiar link automaticamente. Tente copiar manualmente.");
+      });
+  }
+</script>
+{% endblock %}
