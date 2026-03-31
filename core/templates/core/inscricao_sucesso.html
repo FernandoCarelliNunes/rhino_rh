@@ -1,0 +1,13 @@
+{% extends 'core/base.html' %} {% block content %}
+<div class="text-center py-5">
+  <div class="mb-4">
+    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem"></i>
+  </div>
+  <h2 class="fw-bold">Candidatura Enviada!</h2>
+  <p class="text-muted">
+    Obrigado por se candidatar à vaga de <strong>{{ vaga.titulo }}</strong>.
+  </p>
+  <p>Seu currículo já está com nossos recrutadores.</p>
+  <a href="/" class="btn btn-outline-primary mt-3">Voltar para o site</a>
+</div>
+{% endblock %}

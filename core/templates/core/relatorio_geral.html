@@ -1,0 +1,81 @@
+{% extends 'core/base.html' %} {% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold" style="color: #0a1128">Relatório Consolidado</h2>
+  <button onclick="window.print()" class="btn btn-outline-dark btn-sm">
+    🖨️ Exportar PDF
+  </button>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm p-4 bg-rhino text-white">
+      <h6>Total de Vagas Gerenciadas</h6>
+      <h2 class="fw-bold m-0">{{ total_vagas }}</h2>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div
+      class="card border-0 shadow-sm p-4 bg-white border-start border-primary border-4"
+    >
+      <h6 class="text-muted small">Tempo Médio de Fechamento</h6>
+      <h2 class="fw-bold m-0">
+        {{ media_dias }} <span class="fs-6 fw-normal">dias</span>
+      </h2>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div
+      class="card border-0 shadow-sm p-4 bg-white border-start border-success border-4"
+    >
+      <h6 class="text-muted small">Volume Total de Candidatos</h6>
+      <h2 class="fw-bold m-0">{{ total_candidatos }}</h2>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6 mb-4">
+    <div class="card border-0 shadow-sm p-4 h-100">
+      <h5 class="fw-bold mb-3 small">Status das Vagas</h5>
+      <canvas id="chartVagas"></canvas>
+    </div>
+  </div>
+
+  <div class="col-md-6 mb-4">
+    <div class="card border-0 shadow-sm p-4 h-100">
+      <h5 class="fw-bold mb-3 small">Distribuição Global de Candidatos</h5>
+      <canvas id="chartFunil"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Gráfico Vagas (Pizza)
+  new Chart(document.getElementById('chartVagas'), {
+      type: 'pie',
+      data: {
+          labels: [{% for v in vagas_status %}'{{ v.status|capfirst }}',{% endfor %}],
+          datasets: [{
+              data: [{% for v in vagas_status %}{{ v.total }},{% endfor %}],
+              backgroundColor: ['#0d6efd', '#ffc107', '#198754', '#dc3545']
+          }]
+      }
+  });
+
+  // Gráfico Funil (Barra Horizontal)
+  new Chart(document.getElementById('chartFunil'), {
+      type: 'bar',
+      data: {
+          labels: [{% for f in funil_geral %}'{{ f.status_candidato }}',{% endfor %}],
+          datasets: [{
+              label: 'Candidatos',
+              data: [{% for f in funil_geral %}{{ f.total }},{% endfor %}],
+              backgroundColor: '#0a1128',
+              borderRadius: 5
+          }]
+      },
+      options: { indexAxis: 'y', plugins: { legend: { display: false } } }
+  });
+</script>
+{% endblock %}
