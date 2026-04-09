@@ -15,6 +15,10 @@ urlpatterns = [
     path('vagas/exportar-pdf/', views.exportar_vagas_pdf, name='exportar_vagas_pdf'),
     path('relatorio/', views.relatorio_vagas, name='relatorio_vagas'),
     path('vaga/<int:vaga_id>/sincronizar/', views.sincronizar_sophia, name='sincronizar_sophia'),
+    path('vaga/<int:vaga_id>/editar/', views.editar_vaga, name='editar_vaga'),
+    path('vaga/<int:vaga_id>/adicionar-etapa/', views.adicionar_etapa, name='adicionar_etapa'),
+    path('candidato/<int:candidato_id>/favoritar/', views.favoritar_candidato, name='favoritar_candidato'),
+    
 ]
  
 

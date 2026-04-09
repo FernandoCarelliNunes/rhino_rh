@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Count, Avg, F, ExpressionWrapper, fields
-from .models import Vaga, Candidato, Cliente, HistoricoStatus
+from .models import Vaga, Candidato, Cliente, HistoricoStatus, Etapa
 from .forms import VagaForm, CandidatoForm, CadastroClienteForm
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
@@ -11,11 +11,14 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
-from datetime import datetime
+from datetime import datetime, date
 from django.db import connection # Para rodar o SQL puro se necessário
 from reportlab.lib.pagesizes import landscape, A4
 import requests
 from .models import Vaga, Candidato
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 @login_required
 def relatorio_vagas(request):
@@ -126,6 +129,8 @@ def inscrever_vaga(request, vaga_id):
 # --- 1. DASHBOARD ---
 @login_required
 def dashboard(request):
+    # Filtra apenas vagas que NÃO estão com status 'aprovado' (finalizadas)
+    vagas = Vaga.objects.exclude(status='aprovado').order_by('-criado_em')
     if request.user.is_superuser:
         vagas = Vaga.objects.all().order_by('-criado_em')
         status_data = Candidato.objects.values('status_candidato').annotate(total=Count('id'))
@@ -205,18 +210,39 @@ def detalhes_vaga(request, vaga_id):
         'contagem': contagem,
     })
 
+
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from datetime import date
+
 @login_required
 def mudar_status_vaga(request, vaga_id, novo_status):
     vaga = get_object_or_404(Vaga, id=vaga_id)
     
-    # 🛡️ TRAVA DE SEGURANÇA: Apenas admin pode mudar o status da vaga
+    # 1. 🛡️ TRAVA DE SEGURANÇA: Apenas admin/recrutador acessa essa função
     if not request.user.is_superuser:
         messages.error(request, "Apenas os recrutadores da Rhino podem alterar o status das vagas.")
         return redirect('dashboard')
+
+    # 2. 🧊 TRAVA DE FATURAMENTO COM "BYPASS" PARA ADMIN
+    # Se a vaga já está aprovada E o novo status NÃO é uma tentativa de reabertura (ex: 'aberto')
+    if vaga.status == 'aprovado' and novo_status == 'aprovado':
+        messages.warning(request, f"A vaga '{vaga.titulo}' já está finalizada.")
+        return redirect('dashboard')
             
+    # 3. 💰 LÓGICA DE TRANSIÇÃO
+    if novo_status == 'aprovado':
+        vaga.data_fechamento = date.today()
+        messages.success(request, "Vaga finalizada e data de fechamento registrada.")
+    else:
+        # 🔓 REABERTURA: Se o Admin estiver mudando de 'aprovado' para 'aberto' (ou outro)
+        vaga.data_fechamento = None
+        messages.info(request, f"Vaga '{vaga.titulo}' reaberta com sucesso.")
+
     vaga.status = novo_status
     vaga.save()
-    messages.success(request, f"Status da vaga '{vaga.titulo}' atualizado com sucesso!")
+    
     return redirect('dashboard')
 
 # --- 3. CANDIDATOS ---
@@ -359,3 +385,60 @@ def sincronizar_sophia(request, vaga_id):
         messages.error(request, f"Não foi possível conectar à Sophia: {str(e)}")
 
     return redirect('dashboard')
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from .forms import VagaForm # Certifique-se de que o import está correto
+
+@login_required
+def editar_vaga(request, vaga_id):
+    vaga = get_object_or_404(Vaga, id=vaga_id)
+    
+    # Trava de segurança: apenas admin ou quem criou pode editar
+    if not request.user.is_superuser:
+        messages.error(request, "Você não tem permissão para editar esta vaga.")
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        # O segredo aqui é o 'instance=vaga', que diz ao Django para ATUALIZAR e não criar nova
+        form = VagaForm(request.POST, request.FILES, instance=vaga)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Vaga '{vaga.titulo}' atualizada com sucesso!")
+            return redirect('dashboard')
+    else:
+        form = VagaForm(instance=vaga)
+    
+    return render(request, 'core/cadastrar_vaga.html', {
+        'form': form, 
+        'editando': True, 
+        'vaga': vaga
+    })
+    
+
+@login_required
+def adicionar_etapa(request, vaga_id):
+    vaga = get_object_or_404(Vaga, id=vaga_id)
+    if request.method == "POST":
+        nome_etapa = request.POST.get("nome_etapa")
+        if nome_etapa:
+            # Pega a última ordem para colocar a nova no fim da fila
+            ultima_ordem = vaga.etapas_vaga.count()
+            Etapa.objects.create(vaga=vaga, nome=nome_etapa, ordem=ultima_ordem + 1)
+            messages.success(request, f"Etapa '{nome_etapa}' adicionada!")
+    return redirect('detalhes_vaga', vaga_id=vaga.id)
+
+from django.http import JsonResponse # Importe isso no topo
+from django.views.decorators.http import require_POST # E isso também
+
+@login_required
+@require_POST # Garante que só aceite requisições POST por segurança
+def favoritar_candidato(request, candidato_id):
+    candidato = get_object_or_404(Candidato, id=candidato_id)
+    
+    # Inverte o valor (se era True vira False, vice-versa)
+    candidato.favorito = not candidato.favorito
+    candidato.save()
+    
+    # Retorna uma resposta JSON para o JavaScript saber que deu certo
+    return JsonResponse({'status': 'sucesso', 'favorito': candidato.favorito})

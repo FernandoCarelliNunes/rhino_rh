@@ -20,25 +20,29 @@ class Cliente(models.Model):
 
 # 2. Cadastro de Vagas
 class Vaga(models.Model):
-    STATUS_CHOICES = [
-        ('abertura', 'Abertura'),
-        ('candidatura', 'Candidatura'),
-        ('teste', 'Teste'),
-        ('ent_recrutador', 'Entrevista Recrutador'),
-        ('ent_gestor', 'Entrevista Gestor'),
-        ('aprovado', 'Aprovado'),
-        ('reprovado', 'Reprovado'),
-    ]
-
     titulo = models.CharField(max_length=200)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    descricao = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='abertura')
+    # O status continua existindo no banco, mas com um padrão (default)
+    status = models.CharField(max_length=20, default='aberto') 
+    descricao_sumaria = models.TextField()
+    responsabilidades = models.TextField()
+    requisitos_obrigatorios = models.TextField()
+    diferenciais = models.TextField(blank=True, null=True)
+    # O campo de anexo de currículo geralmente fica no formulário do CANDIDATO, 
+    # mas se o Zeca quer anexar um arquivo à VAGA (ex: um descritivo PDF), usamos:
+    arquivo_vaga = models.FileField(upload_to='vagas/', blank=True, null=True)
     criado_em = models.DateTimeField(auto_now_add=True)
+    # Campo automático de registro do sistema
+    criado_em = models.DateTimeField(auto_now_add=True)
+    # Novos campos para o financeiro
+    data_abertura = models.DateField(null=True, blank=True, verbose_name="Data de Abertura Real")
+    data_fechamento = models.DateField(null=True, blank=True, verbose_name="Data de Encerramento")
+    
+    
 
     def __str__(self):
-        return f"{self.titulo} - {self.cliente.nome}"
-
+        return self.titulo
+    
 # 3. Cadastro de Candidatos
 class Candidato(models.Model):
     nome = models.CharField(max_length=200)
@@ -50,6 +54,7 @@ class Candidato(models.Model):
     sophia_id = models.CharField(max_length=100, unique=True, blank=True, null=True)
     link_entrevista = models.URLField(max_length=500, blank=True, null=True)
     score_comportamental = models.FloatField(default=0.0)
+    favorito = models.BooleanField(default=False) # A estrelinha da Kika
 
     def __str__(self):
         return self.nome
@@ -69,5 +74,13 @@ class HistoricoStatus(models.Model):
         return f"{self.candidato.nome}: {self.status_anterior} -> {self.status_novo}"  
     
     
- 
-    
+class Etapa(models.Model):
+    vaga = models.ForeignKey(Vaga, on_delete=models.CASCADE, related_name='etapas_vaga')
+    nome = models.CharField(max_length=100) # Ex: Entrevista RH, Teste de IA
+    ordem = models.PositiveIntegerField(default=0) # Para organizar o funil
+
+    class Meta:
+        ordering = ['ordem']
+
+    def __str__(self):
+        return f"{self.nome} ({self.vaga.titulo})"

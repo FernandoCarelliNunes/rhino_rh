@@ -11,11 +11,32 @@ class CandidatoForm(forms.ModelForm):
         fields = ['nome', 'email', 'vaga', 'curriculo']
         
         
+
 class VagaForm(forms.ModelForm):
     class Meta:
         model = Vaga
-        fields = ['titulo', 'cliente', 'descricao', 'status']
+        fields = [
+            'titulo', 
+            'cliente', 
+            'data_abertura',  # <--- Adicione aqui
+            'descricao_sumaria', 
+            'responsabilidades', 
+            'requisitos_obrigatorios', 
+            'diferenciais', 
+            'arquivo_vaga'
+        ]
         
+        labels = {
+            'data_abertura': 'Data de Abertura',}
+            
+        widgets = {
+            # Isso faz aparecer o calendário no campo de data
+            'data_abertura': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'descricao_sumaria': forms.Textarea(attrs={'rows': 3}),
+            'responsabilidades': forms.Textarea(attrs={'rows': 4}),
+            'requisitos_obrigatorios': forms.Textarea(attrs={'rows': 4}),
+            'diferenciais': forms.Textarea(attrs={'rows': 3}),
+        }        
 
 class CadastroClienteForm(forms.ModelForm):
     # Campos extras para o Usuário

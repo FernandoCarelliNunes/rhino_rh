@@ -13,23 +13,44 @@
         </p>
         <hr />
 
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
           {% csrf_token %}
 
           <div class="row">
-            <div class="col-md-12">{{ form.titulo|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.titulo|as_crispy_field }}</div>
+            <div class="col-md-3">{{ form.cliente|as_crispy_field }}</div>
+            <div class="col-md-3">{{ form.data_abertura|as_crispy_field }}</div>
           </div>
 
           <div class="row">
-            {% if form.cliente %}
-            <div class="col-md-6">{{ form.cliente|as_crispy_field }}</div>
-            {% endif %}
-
-            <div class="col-md-6">{{ form.status|as_crispy_field }}</div>
+            <div class="col-md-12">
+              {{ form.descricao_sumaria|as_crispy_field }}
+            </div>
           </div>
 
           <div class="row">
-            <div class="col-md-12">{{ form.descricao|as_crispy_field }}</div>
+            <div class="col-md-12">
+              {{ form.responsabilidades|as_crispy_field }}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              {{ form.requisitos_obrigatorios|as_crispy_field }}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">{{ form.diferenciais|as_crispy_field }}</div>
+          </div>
+
+          <div class="row mt-2">
+            <div class="col-md-12">
+              <label class="form-label fw-bold small text-muted">
+                Anexar Arquivo da Vaga (PDF/DOC):
+              </label>
+              {{ form.arquivo_vaga|as_crispy_field }}
+            </div>
           </div>
 
           <div class="mt-4 d-flex gap-2">

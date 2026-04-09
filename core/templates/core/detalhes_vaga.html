@@ -20,6 +20,66 @@
   </div>
 </div>
 
+<div class="card shadow-sm border-0 mb-4 bg-light">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="fw-bold mb-0 text-uppercase small text-muted">
+        Fluxo de Seleção Personalizado
+      </h6>
+      <button
+        class="btn btn-sm btn-rhino rounded-pill shadow-sm"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#formEtapa"
+      >
+        <i class="bi bi-plus-lg"></i> Adicionar Etapa
+      </button>
+    </div>
+
+    <div class="collapse mb-3" id="formEtapa">
+      <div class="card card-body border-0 shadow-sm">
+        <form
+          method="POST"
+          action="{% url 'adicionar_etapa' vaga.id %}"
+          class="row g-2"
+        >
+          {% csrf_token %}
+          <div class="col-md-9">
+            <input
+              type="text"
+              name="nome_etapa"
+              class="form-control"
+              placeholder="Ex: Entrevista Liderança, Teste IA, Dinâmica..."
+              required
+            />
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-success w-100" type="submit">
+              Salvar Etapa
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <span class="badge rounded-pill bg-white text-dark border px-3 py-2"
+        >Triagem</span
+      >
+      <i class="bi bi-chevron-right text-muted"></i>
+
+      {% for etapa in vaga.etapas_vaga.all %}
+      <span class="badge rounded-pill bg-primary px-3 py-2 shadow-sm"
+        >{{ etapa.nome }}</span
+      >
+      <i class="bi bi-chevron-right text-muted"></i>
+      {% endfor %}
+
+      <span class="badge rounded-pill bg-success px-3 py-2">Contratação</span>
+    </div>
+  </div>
+</div>
+
 <div class="row mb-4">
   <div class="col">
     <div
@@ -33,16 +93,8 @@
     <div
       class="card border-0 shadow-sm text-center p-3 border-bottom border-warning border-4"
     >
-      <h6 class="text-muted small fw-bold">TESTE</h6>
-      <h4 class="m-0">{{ contagem.teste|default:0 }}</h4>
-    </div>
-  </div>
-  <div class="col">
-    <div
-      class="card border-0 shadow-sm text-center p-3 border-bottom border-primary border-4"
-    >
-      <h6 class="text-muted small fw-bold">ENTREVISTAS</h6>
-      <h4 class="m-0">{{ contagem.entrevistas|default:0 }}</h4>
+      <h6 class="text-muted small fw-bold">EM PROCESSO</h6>
+      <h4 class="m-0">{{ candidatos.count }}</h4>
     </div>
   </div>
   <div class="col">
@@ -76,6 +128,7 @@
     <table class="table table-hover align-middle mb-0">
       <thead class="table-light">
         <tr>
+          <th width="50" class="text-center">⭐</th>
           <th class="ps-3">Nome / E-mail</th>
           <th>Status Atual</th>
           <th>Currículo</th>
@@ -85,6 +138,18 @@
       <tbody>
         {% for c in candidatos %}
         <tr>
+          <td class="text-center">
+            <a
+              href="#"
+              class="text-warning fs-5 btn-favoritar"
+              data-id="{{ c.id }}"
+              data-url="{% url 'favoritar_candidato' c.id %}"
+            >
+              <i
+                class="bi {% if c.favorito %}bi-star-fill{% else %}bi-star{% endif %}"
+              ></i>
+            </a>
+          </td>
           <td class="ps-3">
             <a
               href="#"
@@ -124,30 +189,25 @@
                 type="button"
                 data-bs-toggle="dropdown"
               >
-                Gerenciar
+                Mover para...
               </button>
               <ul class="dropdown-menu shadow border-0">
                 <li>
                   <a
                     class="dropdown-item"
-                    href="{% url 'mudar_status_candidato' c.id 'Teste' %}"
-                    >Mover para Teste</a
+                    href="{% url 'mudar_status_candidato' c.id 'Triagem' %}"
+                    >Triagem</a
                   >
                 </li>
+                {% for etapa in vaga.etapas_vaga.all %}
                 <li>
                   <a
                     class="dropdown-item"
-                    href="{% url 'mudar_status_candidato' c.id 'Entrevista RH' %}"
-                    >Entrevista RH</a
+                    href="{% url 'mudar_status_candidato' c.id etapa.nome %}"
+                    >{{ etapa.nome }}</a
                   >
                 </li>
-                <li>
-                  <a
-                    class="dropdown-item"
-                    href="{% url 'mudar_status_candidato' c.id 'Entrevista Gestor' %}"
-                    >Entrevista Gestor</a
-                  >
-                </li>
+                {% endfor %}
                 <li><hr class="dropdown-divider" /></li>
                 <li>
                   <a
@@ -172,7 +232,7 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="4" class="text-center p-5 text-muted">
+          <td colspan="5" class="text-center p-5 text-muted">
             Nenhum candidato inscrito.
           </td>
         </tr>
@@ -214,8 +274,8 @@
             ></div>
             <p class="mb-0 fw-bold">{{ h.status_novo }}</p>
             <p class="text-muted small mb-0">
-              Saindo de <em>{{ h.status_anterior }}</em><br />
-              {{ h.data_mudanca|date:"d/m/Y H:i" }}
+              Saindo de <em>{{ h.status_anterior }}</em><br />{{
+              h.data_mudanca|date:"d/m/Y H:i" }}
             </p>
           </div>
           {% endfor %}
@@ -224,4 +284,41 @@
     </div>
   </div>
 </div>
-{% endfor %} {% endblock %}
+{% endfor %}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const stars = document.querySelectorAll(".btn-favoritar");
+
+    stars.forEach((star) => {
+      star.addEventListener("click", function (e) {
+        e.preventDefault();
+        const url = this.getAttribute("data-url");
+        const icon = this.querySelector("i");
+
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "sucesso") {
+              if (data.favorito) {
+                icon.classList.remove("bi-star");
+                icon.classList.add("bi-star-fill");
+              } else {
+                icon.classList.remove("bi-star-fill");
+                icon.classList.add("bi-star");
+              }
+            }
+          })
+          .catch((error) => console.error("Erro:", error));
+      });
+    });
+  });
+</script>
+
+{% endblock %}
