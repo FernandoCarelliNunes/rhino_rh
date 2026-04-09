@@ -139,3 +139,17 @@ import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Procure ou adicione esta linha no seu settings.py
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-80eadb.up.railway.app',
+]
+
+# Aproveite e garanta que o ALLOWED_HOSTS também aceite o domínio
+ALLOWED_HOSTS = [
+    'web-production-80eadb.up.railway.app',
+    'localhost',
+    '127.0.0.1',
+    '*', # O '*' permite qualquer um, bom para testes iniciais
+]
+
