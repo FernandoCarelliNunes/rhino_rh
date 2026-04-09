@@ -1,44 +1,103 @@
 {% extends 'core/base.html' %} {% block content %}
-<div class="row mb-4">
-  <div class="col-md-12">
-    <h2>Painel de Controle</h2>
-    <p class="text-muted">Bem-vindo ao sistema de recrutamento da Rhino.</p>
+<div class="row mb-4 align-items-center">
+  <div class="col-md-7">
+    <h2 class="fw-bold m-0">Painel de Controle</h2>
+    <p class="text-muted">
+      Bem-vindo ao sistema Rhino, <strong>{{ user.username }}</strong>.
+    </p>
+  </div>
+  <div class="col-md-5 text-md-end">
+    <div class="d-flex gap-2 justify-content-md-end">
+      {% if user.is_superuser %}
+      <a
+        href="{% url 'cadastrar_cliente' %}"
+        class="btn btn-outline-primary shadow-sm"
+        >Empresa Cliente</a
+      >
+      {% endif %}
+      <a href="{% url 'cadastrar_vaga' %}" class="btn btn-outline-dark"
+        >+ Nova Vaga</a
+      >
+      <a href="{% url 'cadastrar_candidato' %}" class="btn btn-rhino"
+        >+ Candidato</a
+      >
+    </div>
   </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h4 class="fw-bold text-dark">Gestão de Vagas</h4>
-  <div class="d-flex gap-2">
-    <a href="{% url 'cadastrar_vaga' %}" class="btn btn-outline-dark"
-      >+ Nova Vaga</a
+<div
+  class="card shadow-sm border-0 mb-4 bg-light border-start border-primary border-4"
+>
+  <div class="card-body">
+    <h6 class="fw-bold mb-3">
+      <i class="bi bi-table me-1"></i> Relatório Detalhado de Vagas
+    </h6>
+    <form
+      method="GET"
+      action="{% url 'relatorio_vagas' %}"
+      class="row g-3 align-items-end"
     >
-    <a href="{% url 'cadastrar_candidato' %}" class="btn btn-rhino"
-      >+ Cadastrar Candidato</a
-    >
-  </div>
-</div>
-
-<div class="row">
-  <div class="col-md-4">
-    <div class="card shadow-sm border-0 mb-3">
-      <div class="card-body text-center">
-        <h5 class="text-muted">Vagas Ativas</h5>
-        <h2 class="fw-bold text-primary">{{ vagas.count }}</h2>
+      <div class="col-md-4">
+        <label class="small text-muted fw-bold">Por Vaga:</label>
+        <select name="vaga" class="form-select form-select-sm">
+          <option value="">Todas as vagas</option>
+          {% for v in vagas %}
+          <option value="{{ v.id }}">{{ v.titulo }}</option>
+          {% endfor %}
+        </select>
       </div>
+      <div class="col-md-3">
+        <label class="small text-muted fw-bold">Data Início:</label>
+        <input
+          type="date"
+          name="data_inicio"
+          class="form-control form-select-sm"
+        />
+      </div>
+      <div class="col-md-3">
+        <label class="small text-muted fw-bold">Data Fim:</label>
+        <input
+          type="date"
+          name="data_fim"
+          class="form-control form-select-sm"
+        />
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-sm btn-dark w-100 shadow-sm">
+          <i class="bi bi-eye me-1"></i> Ver Relatório
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm border-0 p-4 h-100">
+      <h5 class="fw-bold mb-3">Fluxo por Etapa</h5>
+      <div style="height: 250px"><canvas id="funnelChart"></canvas></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div
+      class="card shadow-sm border-0 h-100 d-flex flex-column justify-content-center text-center p-4"
+    >
+      <h5 class="text-muted mb-2">Vagas Ativas</h5>
+      <h1 class="display-3 fw-bold text-primary m-0">{{ vagas.count }}</h1>
     </div>
   </div>
 </div>
 
 <div class="card shadow-sm border-0 mt-4">
-  <div class="card-header bg-white fw-bold py-3">Vagas Recentes</div>
+  <div class="card-header bg-white fw-bold py-3">Gestão de Vagas Recentes</div>
   <div class="card-body p-0">
     <table class="table table-hover align-middle mb-0">
       <thead class="table-light">
         <tr>
-          <th class="ps-3">Vaga</th>
-          <th>Cliente</th>
-          <th>Status da Vaga</th>
-          <th class="text-center">Ações</th>
+          <th class="ps-3 border-0">Vaga</th>
+          <th class="border-0">Cliente</th>
+          <th class="border-0">Status</th>
+          <th class="text-center border-0">Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -47,17 +106,17 @@
           <td class="ps-3"><strong>{{ vaga.titulo }}</strong></td>
           <td>{{ vaga.cliente.nome }}</td>
           <td>
+            {% if user.is_superuser %}
             <div class="dropdown">
               <button
-                class="btn btn-sm dropdown-toggle"
+                class="btn btn-sm dropdown-toggle border-0"
                 type="button"
                 data-bs-toggle="dropdown"
-                style="background-color: #0dcaf0; color: #000; font-weight: 500"
+                style="background-color: #0dcaf0; color: #000"
               >
                 {{ vaga.get_status_display }}
               </button>
-              <ul class="dropdown-menu shadow">
-                <li><h6 class="dropdown-header">Alterar Status:</h6></li>
+              <ul class="dropdown-menu shadow border-0">
                 <li>
                   <a
                     class="dropdown-item"
@@ -68,65 +127,95 @@
                 <li>
                   <a
                     class="dropdown-item"
-                    href="{% url 'mudar_status_vaga' vaga.id 'candidatura' %}"
-                    >Candidatura</a
-                  >
-                </li>
-                <li>
-                  <a
-                    class="dropdown-item"
-                    href="{% url 'mudar_status_vaga' vaga.id 'teste' %}"
-                    >Teste</a
-                  >
-                </li>
-                <li>
-                  <a
-                    class="dropdown-item"
-                    href="{% url 'mudar_status_vaga' vaga.id 'ent_recrutador' %}"
-                    >Entrevista RH</a
-                  >
-                </li>
-                <li>
-                  <a
-                    class="dropdown-item"
-                    href="{% url 'mudar_status_vaga' vaga.id 'ent_gestor' %}"
-                    >Entrevista Gestor</a
-                  >
-                </li>
-                <li><hr class="dropdown-divider" /></li>
-                <li>
-                  <a
-                    class="dropdown-item text-success"
                     href="{% url 'mudar_status_vaga' vaga.id 'aprovado' %}"
-                    >Aprovado / Finalizado</a
-                  >
-                </li>
-                <li>
-                  <a
-                    class="dropdown-item text-danger"
-                    href="{% url 'mudar_status_vaga' vaga.id 'reprovado' %}"
-                    >Reprovado</a
+                    >Finalizar</a
                   >
                 </li>
               </ul>
             </div>
+            {% else %}
+            <span class="badge bg-light text-dark border"
+              >{{ vaga.get_status_display }}</span
+            >
+            {% endif %}
           </td>
           <td class="text-center">
-            <a
-              href="{% url 'detalhes_vaga' vaga.id %}"
-              class="btn btn-sm btn-outline-dark"
-            >
-              Gerenciar Candidatos
-            </a>
+            <div class="d-flex gap-1 justify-content-center">
+              <a
+                href="{% url 'detalhes_vaga' vaga.id %}"
+                class="btn btn-sm btn-outline-dark"
+                title="Ver Detalhes"
+              >
+                <i class="bi bi-search"></i>
+              </a>
+
+              <a
+                href="{% url 'sincronizar_sophia' vaga.id %}"
+                class="btn btn-sm btn-outline-info"
+                title="Sincronizar Candidatos da IA Sophia"
+              >
+                <i class="bi bi-arrow-repeat"></i> Sophia
+              </a>
+
+              <button
+                class="btn btn-sm btn-outline-primary"
+                onclick="copiarLink('{{ request.get_host }}{% url 'inscrever_vaga' vaga.id %}')"
+                title="Copiar link da vaga"
+              >
+                <i class="bi bi-link-45deg"></i> Link
+              </button>
+            </div>
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="4" class="text-center p-4">Nenhuma vaga cadastrada.</td>
+          <td colspan="4" class="text-center p-5 text-muted">
+            Nenhuma vaga cadastrada.
+          </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // 1. CONFIGURAÇÃO DO GRÁFICO
+  const ctx = document.getElementById('funnelChart').getContext('2d');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: {{ status_labels|safe|default:"[]" }},
+        datasets: [{
+          label: 'Candidatos',
+          data: {{ status_totals|safe|default:"[]" }},
+          backgroundColor: ['#0a1128', '#003554', '#0582ca', '#00a6fb', '#198754', '#dc3545'],
+          borderRadius: 8,
+          barThickness: 40
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1 } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // 2. FUNÇÃO COPIAR LINK
+  function copiarLink(url) {
+      const fullUrl = window.location.protocol + '//' + url;
+      navigator.clipboard.writeText(fullUrl).then(() => {
+          alert("🚀 Link de inscrição copiado com sucesso!");
+      }).catch(err => {
+          alert("Erro ao copiar link.");
+      });
+  }
+</script>
 {% endblock %}

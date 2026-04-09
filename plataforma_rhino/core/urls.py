@@ -8,7 +8,18 @@ urlpatterns = [
     path('candidato/<int:candidato_id>/status/<str:novo_status>/', views.mudar_status_candidato, name='mudar_status'),
     path('vaga/nova/', views.cadastrar_vaga, name='cadastrar_vaga'),
     path('vaga/<int:vaga_id>/status/<str:novo_status>/', views.mudar_status_vaga, name='mudar_status_vaga'),
-    path('relatorios/', views.relatorios, name='relatorios'),
+    path('relatorios/geral/', views.relatorio_geral, name='relatorio_geral'),
+    path('cliente/novo/', views.cadastrar_cliente, name='cadastrar_cliente'),
+    path('vaga/<int:vaga_id>/inscrever/', views.inscrever_vaga, name='inscrever_vaga'),
+    path('candidato/<int:candidato_id>/status/<str:novo_status>/',views.mudar_status_candidato, name='mudar_status_candidato'),
+    path('vagas/exportar-pdf/', views.exportar_vagas_pdf, name='exportar_vagas_pdf'),
+    path('relatorio/', views.relatorio_vagas, name='relatorio_vagas'),
+    path('vaga/<int:vaga_id>/sincronizar/', views.sincronizar_sophia, name='sincronizar_sophia'),
+    path('vaga/<int:vaga_id>/editar/', views.editar_vaga, name='editar_vaga'),
+    path('vaga/<int:vaga_id>/adicionar-etapa/', views.adicionar_etapa, name='adicionar_etapa'),
+    path('candidato/<int:candidato_id>/favoritar/', views.favoritar_candidato, name='favoritar_candidato'),
+    
 ]
+ 
 
 
